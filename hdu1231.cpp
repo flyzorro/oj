@@ -59,7 +59,7 @@ int s[MAX_NUM] = { 0 };
 
 struct node
 {
-	int l, r, sum;
+	int l, r, sum;//scope
 	node() {};
 	node(int x, int y, int z) :l(x), r(y), sum(z) {};
 
@@ -67,13 +67,13 @@ struct node
 
 node cal_max_nums(int x, int y)
 {
-	if (y - x == 1) return  node(x,y, nums[x]);
+	if (y - x == 1 ) return  node(x,x, nums[x]);
 	int mid = x + (y - x) / 2;
 
 	//[i,j)
 	node x_mid = cal_max_nums(x, mid);
 	node mid_y = cal_max_nums(mid, y);
-	node max_half = x_mid.sum > mid_y.sum ? x_mid : mid_y;
+	node max_half = x_mid.sum >= mid_y.sum ? x_mid : mid_y;
 	//cal from mid for maxl
 	int lsum = 0, lmax = nums[mid - 1], l = mid - 1;
 	for (int i = mid - 1; i >= x; i--) 
@@ -89,10 +89,7 @@ node cal_max_nums(int x, int y)
 	};
 
 	if (max_half.sum > lmax + rmax) return max_half;
-
 	return node(l,r,lmax+rmax);
-	
-
 
 }
 
@@ -115,7 +112,7 @@ int main()
 	while (scanf("%d", &num_count) == 1 && num_count)
 	{
 		bool is_all_negative = true;
-		FOR(i, 0, num_count) { scanf("%d", &nums[i]); if (nums[i] > 0) is_all_negative = false; }
+		FOR(i, 0, num_count) { scanf("%d", &nums[i]); if (nums[i] >= 0) is_all_negative = false; }
 		solve(is_all_negative);
 	}
 
