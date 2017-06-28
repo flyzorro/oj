@@ -5,6 +5,7 @@ PROG:sort3
 LANG: C++
 */
 
+#pragma warning(disable:4996)
 
 #include <cstdio> 
 #include <iostream> 
@@ -56,36 +57,53 @@ int num_count = 0, sum = 0;
 int nums[MAX_NUM] = { 0 };
 int s[MAX_NUM] = { 0 };
 
-int smax = 0, imax = 1, jmax = 1;
-
-void check_max(int i,int j)
+struct node
 {
-	if (s[j] - s[i - 1] > smax) 
+	int l, r, sum;
+	node() {};
+	node(int x, int y, int z) :l(x), r(y), sum(z) {};
+
+};
+
+node cal_max_nums(int x, int y)
+{
+	if (y - x == 1) return  node(x,y, nums[x]);
+	int mid = x + (y - x) / 2;
+
+	//[i,j)
+	node x_mid = cal_max_nums(x, mid);
+	node mid_y = cal_max_nums(mid, y);
+	node max_half = x_mid.sum > mid_y.sum ? x_mid : mid_y;
+	//cal from mid for maxl
+	int lsum = 0, lmax = nums[mid - 1], l = mid - 1;
+	for (int i = mid - 1; i >= x; i--) 
 	{ 
-		smax = s[j] - s[i - 1]; imax = i;  jmax = j; 
+		lsum += nums[i]; 
+		if (lsum > lmax) { lmax = lsum; l = i; }
+	}
+	int rsum = 0, rmax = nums[mid], r = mid;
+	for (int i = mid; i < y; i++) 
+	{ 
+		rsum += nums[i]; 
+		if (rsum > rmax) { rmax = rsum; r = i; };
 	};
+
+	if (max_half.sum > lmax + rmax) return max_half;
+
+	return node(l,r,lmax+rmax);
+	
+
+
 }
 
 void solve(bool negative)
 {
-	/*int sum_max = nums[0];
-	REP (i, num_count)
-		REP(j, num_count) { sum = 0; for (int k = i; k <= j; k++) { sum += nums[k]; tot++; } ckmax(sum_max, sum); }*/
-	//[1,num_count]
-	s[0] = 0;
-	smax = nums[1];
-	FOR(i, 1, num_count + 1)
-	{
-		s[i] = s[i - 1] + nums[i]; 
-	}
+	if (negative) { printf("%d %d %d\n", 0, nums[0], nums[num_count-1]); return; }
 
-	if (negative) { printf("%d %d %d\n", 0, nums[1], nums[num_count]); return;}
 
-	FOR(i, 1, num_count+1)
-		FOR(j, i, num_count + 1) { check_max(i, j); }
-	
+	node n = cal_max_nums(0, num_count);
 
-	printf("%d %d %d\n", smax, nums[imax],nums[jmax]);
+	printf("%d %d %d\n", n.sum, nums[n.l], nums[n.r]);
 }
 
 
@@ -93,11 +111,11 @@ int main()
 {
 	/*freopen("sort3.in", "r", stdin);
 	freopen("sort3.out", "w", stdout);*/
-	
+
 	while (scanf("%d", &num_count) == 1 && num_count)
 	{
 		bool is_all_negative = true;
-		FOR(i, 1, num_count + 1) { scanf("%d", &nums[i]); if (nums[i] > 0) is_all_negative = false; }
+		FOR(i, 0, num_count) { scanf("%d", &nums[i]); if (nums[i] > 0) is_all_negative = false; }
 		solve(is_all_negative);
 	}
 
