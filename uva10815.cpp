@@ -4,7 +4,7 @@ ID: flyzorr1
 PROG: numtri
 LANG: C++
 */
-
+#pragma warning(disable:4996)
 
 #include <cstdio> 
 #include <iostream> 
@@ -53,22 +53,24 @@ template<class T> void ckmax(T &a, const T &b) { if (b>a) a = b; }
 
 #define MAX_NUM 1000
 set<string> book;
-char s[MAX_NUM] = {0};
+char s[MAX_NUM] = { 0 };
 void solve()
 {
-	char delim[] = {" ,:;\n"};
+	char delim[] = { " .,:;\n\"" };
 	char* token = NULL;
-	while (scanf("%s",s) != EOF)
+	while (scanf("%s", s))
 	{
-		token = strok(s, delim);
+		token = strtok(s, delim);
 		while (token != NULL)
 		{
-			book.insert(tolower(token));
-			token = strok(NULL, delim);
+			REP(i, strlen(token)) *(token + i) = tolower(*(token+i));
+			//printf("%s\n",token);
+			book.insert(token);
+			token = strtok(NULL, delim);
 		}
 	}
 
-	for (auto p: book) printf("%s\n", p);
+	for (auto p : book) printf("%s\n", p);
 
 }
 
