@@ -4,6 +4,7 @@ ID: flyzorr1
 PROG: numtri
 LANG: C++11
 */
+#pragma warning(disable:4996)
 
 
 #include <cstdio> 
@@ -23,6 +24,7 @@ LANG: C++11
 #include <cstdlib> 
 #include <ctime> 
 #include <cstring> 
+#include <iterator>
 #include <string.h> 
 
 using namespace std;
@@ -53,8 +55,17 @@ template<class T> void ckmax(T &a, const T &b) { if (b>a) a = b; }
 
 #define MAX_N 100
 
-int tcs = 0,ops = 0;
-char cmds[MAX_N] = {0};
+enum COMMANDS
+{
+	PUSH = 1,
+	DUP = 2,
+	ADD = 3,
+	INTERSECT = 4,
+	UNION = 5
+};
+
+int tcs = 0, ops = 0;
+char cmds[MAX_N] = { 0 };
 
 typedef set<int> SI;
 vector<SI> IDCache;
@@ -62,85 +73,129 @@ map<SI, int> SetCache;
 stack<int> stacks;
 void print(int id)
 {
-    int size = IDCache(id).size();
-    return size > 0 ? size - 1 : 0;
+	int size = IDCache[id].size();
+	size = size > 0 ? size - 1 : 0;
+	printf("%d\n", size);
 }
 
 
 void push()
 {
-    stacks.push(id);
-    SI si;
-    si.insert(0);
-    
-    if (SetCache[si] == 0) {IDCache.push_back(si);SetCache[si]+=1; }
+	stacks.push(0);
+	SI si;
+	si.insert(0);
+
+	if (SetCache[si] == 0) { IDCache.push_back(si); SetCache[si] += 1; }
 }
 
 void dup()
 {
-    if (stacks.empty()) return;
-    stacks.push(stacks.top());
+	if (stacks.empty()) return;
+	stacks.push(stacks.top());
 }
 
 void ops_add()
 {
-    
-    int l = 0, r = 0;
-    if (stacks.size() < 2) return;
-    l = stacks.top();
-    stacks.pop();
-    r = stacks.top();
-    stacks.pop();
-    SI si = IDCache[r].insert(l);
 
-    if (SetCache[si] == 0) {IDCache.push_back(si);SetCache[si]+=1; }
+	int l = 0, r = 0;
+	if (stacks.size() < 2) return;
+	l = stacks.top();
+	stacks.pop();
+	r = stacks.top();
+	stacks.pop();
+
+	SI si = IDCache[r];
+	si.insert(l);
+
+	if (SetCache[si] == 0) { IDCache.push_back(si); SetCache[si] += 1; }
 }
 
 void ops_union()
 {
-    int l = 0, r = 0;
-    if (stacks.size() < 2) return;
-    l = stacks.top();
-    stacks.pop();
-    r = stacks.top();
-    stacks.pop();
-    SI si = set_union(IDCache[l], IDCache[r]);
-    if (SetCache[si] == 0) {IDCache.push_back(si);SetCache[si]+=1; }
+	int l = 0, r = 0;
+	if (stacks.size() < 2) return;
+	l = stacks.top();
+	stacks.pop();
+	r = stacks.top();
+	stacks.pop();
+	SI si;
+	set_union(ALL(IDCache[l]), ALL(IDCache[r]),inserter(si, si.begin()));
+	if (SetCache[si] == 0) { IDCache.push_back(si); SetCache[si] += 1; }
 
 }
 
 void ops_intersect()
 {
-    int l= 0, r = 0;
-    if (stacks.size() < 2) return;
-    l = stacks.top();
-    stacks.pop();
-    r = stacks.top();
-    stacks.pop();
+	int l = 0, r = 0;
+	if (stacks.size() < 2) return;
+	l = stacks.top();
+	stacks.pop();
+	r = stacks.top();
+	stacks.pop();
 
-    SI si = set_intersection(IDCache[l], IDCache[r]);
-    if (SetCache[si] == 0) {IDCache.push_back(si);SetCache[si]+=1; }
+	SI si;
+	set_intersection(ALL(IDCache[l]), ALL(IDCache[r]),  inserter(si, si.begin()));
+	if (SetCache[si] == 0) { IDCache.push_back(si); SetCache[si] += 1; }
+}
+
+COMMANDS parseCmd(char* cmds)
+{
+
+	if (strcmp(cmds, "PUSH") == 0) return PUSH;
+	if (strcmp(cmds, "ADD") == 0) return ADD;
+	if (strcmp(cmds, "DUP") == 0) return DUP;
+	if (strcmp(cmds, "INTERSECT") == 0) return INTERSECT;
+	if (strcmp(cmds, "UNION") == 0) return UNION;
 }
 
 void solve()
 {
 
-    
+	
+
+	switch (parseCmd(cmds))
+	{
+	case PUSH:
+		push();
+		break;
+	case DUP:
+		dup();
+		break;
+	case UNION:
+		ops_union();
+		break;
+	case ADD:
+		ops_add();
+		break;
+	case INTERSECT:
+
+		ops_intersect();
+		break;
+	default:
+		break;
+	}
+
+	print(stacks.top());
+
 }
 
 int main()
 {
-    scanf("%d", &tcs);
-    REP (i, tcs)
-    {
-        while (scanf("%d", &ops)== 1 && ops)
-        {
-            memset(cmds, 0, sizeof(cmds));
-            REP (i, ops) scanf("%s", &cmds[i]);
-            solve();
-        }
+	scanf("%d", &tcs);
+	REP(i, tcs)
+	{
+		while (scanf("%d", &ops) == 1 && ops)
+		{
+			memset(cmds, 0, sizeof(cmds));
+			REP(i, ops) { scanf("%s", cmds); solve(); }
+		}
 
-    }
-	solve();
+		printf("%s\n", "***");
+
+		IDCache.clear();
+		stack<int>().swap(stacks);
+		SetCache.clear();
+
+	}
 	return 0;
 }
