@@ -50,8 +50,8 @@ const double eps = 1e-11;
 template<class T> T sqr(const T &x) { return x*x; }
 template<class T> T lowbit(const T &x) { return (x ^ (x - 1))&x; }
 template<class T> int countbit(const T &n) { return (n == 0) ? 0 : (1 + countbit(n&(n - 1))); }
-template<class T> void ckmin(T &a, const T &b) { if (b<a) a = b; }
-template<class T> void ckmax(T &a, const T &b) { if (b>a) a = b; }
+template<class T> void ckmin(T &a, const T &b) { if (b < a) a = b; }
+template<class T> void ckmax(T &a, const T &b) { if (b > a) a = b; }
 
 #define MAX_N 100
 
@@ -71,21 +71,24 @@ typedef set<int> SI;
 vector<SI> IDCache;
 map<SI, int> SetCache;
 stack<int> stacks;
-void print(int id)
+int set_cache(SI si)
 {
-	int size = IDCache[id].size();
-	size = size > 0 ? size - 1 : 0;
-	printf("%d\n", size);
+	if (SetCache.count(si) == 0) { IDCache.push_back(si); SetCache[si] = IDCache.size() - 1; return IDCache.size() - 1; }
+
+	return SetCache[si];
+}
+
+void print()
+{
+	if (stacks.empty()) return;
+	printf("%d\n", (int)IDCache[stacks.top()].size());
 }
 
 
 void push()
 {
-	stacks.push(0);
 	SI si;
-	si.insert(0);
-
-	if (SetCache[si] == 0) { IDCache.push_back(si); SetCache[si] += 1; }
+	stacks.push(set_cache(si));
 }
 
 void dup()
@@ -97,45 +100,47 @@ void dup()
 void ops_add()
 {
 
-	int l = 0, r = 0;
+	SI l, r;
 	if (stacks.size() < 2) return;
-	l = stacks.top();
+	l = IDCache[stacks.top()];
 	stacks.pop();
-	r = stacks.top();
+	r = IDCache[stacks.top()];
 	stacks.pop();
 
-	SI si = IDCache[r];
-	si.insert(l);
+	SI si = r;
+	si.insert(set_cache(l));
+	stacks.push(set_cache(si));
 
-	if (SetCache[si] == 0) { IDCache.push_back(si); SetCache[si] += 1; }
 }
 
 void ops_union()
 {
-	int l = 0, r = 0;
+	SI l, r;
 	if (stacks.size() < 2) return;
-	l = stacks.top();
+	l = IDCache[stacks.top()];
 	stacks.pop();
-	r = stacks.top();
+	r = IDCache[stacks.top()];
 	stacks.pop();
-	SI si;
-	set_union(ALL(IDCache[l]), ALL(IDCache[r]),inserter(si, si.begin()));
-	if (SetCache[si] == 0) { IDCache.push_back(si); SetCache[si] += 1; }
 
+	SI si;
+	set_union(ALL(l), ALL(r), inserter(si, si.begin()));
+
+	stacks.push(set_cache(si));
 }
 
 void ops_intersect()
 {
-	int l = 0, r = 0;
+	SI l, r;
 	if (stacks.size() < 2) return;
-	l = stacks.top();
+	l = IDCache[stacks.top()];
 	stacks.pop();
-	r = stacks.top();
+	r = IDCache[stacks.top()];
 	stacks.pop();
 
 	SI si;
-	set_intersection(ALL(IDCache[l]), ALL(IDCache[r]),  inserter(si, si.begin()));
-	if (SetCache[si] == 0) { IDCache.push_back(si); SetCache[si] += 1; }
+	set_intersection(ALL(l), ALL(r), inserter(si, si.begin()));
+
+	stacks.push(set_cache(si));
 }
 
 COMMANDS parseCmd(char* cmds)
@@ -151,7 +156,7 @@ COMMANDS parseCmd(char* cmds)
 void solve()
 {
 
-	
+
 
 	switch (parseCmd(cmds))
 	{
@@ -175,27 +180,30 @@ void solve()
 		break;
 	}
 
-	print(stacks.top());
+	print();
 
 }
 
 int main()
 {
-	scanf("%d", &tcs);
-	REP(i, tcs)
-	{
-		while (scanf("%d", &ops) == 1 && ops)
-		{
-			memset(cmds, 0, sizeof(cmds));
-			REP(i, ops) { scanf("%s", cmds); solve(); }
-		}
+	// freopen("test.in", "r", stdin);
+	// freopen("test.out", "w", stdout);
 
+	int cnt = 0;
+	scanf("%d", &tcs);
+
+	while (scanf("%d", &ops) == 1 && cnt++ != tcs)
+	{
+		REP(i, ops) {
+			memset(cmds, 0, sizeof(cmds));
+			scanf("%s", cmds);
+			solve();
+		}
 		printf("%s\n", "***");
 
 		IDCache.clear();
 		stack<int>().swap(stacks);
 		SetCache.clear();
-
 	}
 	return 0;
 }
