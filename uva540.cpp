@@ -53,41 +53,31 @@ template<class T> int countbit(const T &n) { return (n == 0) ? 0 : (1 + countbit
 template<class T> void ckmin(T &a, const T &b) { if (b < a) a = b; }
 template<class T> void ckmax(T &a, const T &b) { if (b > a) a = b; }
 
-typedef struct CmpQ CmpQ;
-typedef struct node node;
-
-struct node
-{
-	int t, q, v;
-	node(int team, int q_pos, int value) :t(team), q(q_pos), v(value)
-	{
-	}
-};
-
-struct CmpQ
-{
-	bool operator ()(const node& a, const node& b) const
-	{
-		if (a.t == b.t) return a.q < b.q;
-		return a.q < b.q;
-	}
-};
-
+#define MAX_N 1010
+typedef queue<int> QI;
 map<int, int> tIDCaches;
-priority_queue<node, vector<node>, CmpQ> team_queue;
+QI q, q2[MAX_N];
 bool finished = false;
-int q_id = 0;
 
 void  handle_queue(int m)
 {
-	team_queue.push(node(tIDCaches[m], q_id++, m));
+	int t = tIDCaches[m];
+	if (q2[t].empty()) { q.push(t); q2[t].push(m); return; }
+
+	q2[t].push(m);
+
 }
 
 void handle_deque()
 {
-	if (team_queue.empty()) return;
-	node n = team_queue.top(); team_queue.pop();
-	printf("%d\n", n.v);
+	if (q.empty()) return;
+
+	int t = q.front();
+	if (q2[t].empty()) return;
+
+	printf("%d\n", q2[t].front()); q2[t].pop();
+
+	if (q2[t].empty()) q.pop();
 }
 
 
@@ -119,14 +109,16 @@ void solve()
 
 int main()
 {
-	freopen("test.in", "r", stdin);
-	freopen("test.out", "w", stdout);
+	// freopen("test.in", "r", stdin);
+	// freopen("test.out", "w", stdout);
 	int teams = 0, cnt = 0;
 	while (scanf("%d", &teams) == 1 && teams)
 	{
-		q_id = 0;
+
 		tIDCaches.clear();
-		priority_queue<node, vector<node>, CmpQ>().swap(team_queue);
+
+		QI().swap(q);
+		REP (i,MAX_N) if (!q2[i].empty()) QI().swap(q2[i]);
 		printf("Scenario #%d\n", ++cnt);
 		REP(i, teams)
 		{
